@@ -10,12 +10,57 @@ import subprocess
 import webbrowser
 import random
 
-"""
+# For the GUI
 import Tkinter
+import Tkconstants
 import ttkcalendar
 import tkSimpleDialog
 import CalendarDialog
-"""
+import TimeDialog
+import tkFileDialog
+
+class VideoAlarmClockUI(Tkinter.Frame):
+
+	def __init__(self, root):
+
+		Tkinter.Frame.__init__(self, root)
+
+		# set minimum window size
+		root.minsize(width=300, height=200)
+
+		# options for buttons
+		button_opt = {'fill': Tkconstants.BOTH, 'padx': 30, 'pady': 10}
+
+		# define button for setting time and date here
+		
+		Tkinter.Button(root, text='Select Date', command=lambda:self.getdate(root)).pack(**button_opt)
+		Tkinter.Button(root, text='Select Time', )
+		Tkinter.Button(root, text='Select Video File', command=self.askopenfilename).pack(**button_opt)
+		#Tkinter.Button(root, text='Set Alarm', command=self.setalarm).pack(**button_opt)
+
+		# define options for opening or saving a file
+		self.file_opt = options = {}
+		options['defaultextension'] = '.txt'
+		options['filetypes'] = [('all files', '.*'), ('text files', '.txt')]
+		options['initialdir'] = 'C:\\'
+		options['initialfile'] = 'videos.txt'
+		options['parent'] = root
+		options['title'] = 'This is a title'
+
+	def askopenfilename(self):
+		return tkFileDialog.askopenfilename(**self.file_opt)
+
+	def getdate(self, root):
+		cd = CalendarDialog.CalendarDialog(root)
+		td = TimeDialog.TimeDialog(root)
+		print cd.result
+
+if __name__ == '__main__':
+	root = Tkinter.Tk()
+	root.title("Video Alarm Clock")
+	VideoAlarmClockUI(root).pack()
+	root.mainloop()
+	quit()
 
 # Check number of arguments
 if len(sys.argv) != 6:
