@@ -33,8 +33,7 @@ class VideoAlarmClockUI(Tkinter.Frame):
 
 		# define button for setting time and date here
 		
-		Tkinter.Button(root, text='Select Date', command=lambda:self.getdate(root)).pack(**button_opt)
-		Tkinter.Button(root, text='Select Time', )
+		Tkinter.Button(root, text='Select Date and Time', command=lambda:self.getdatetime(root)).pack(**button_opt)
 		Tkinter.Button(root, text='Select Video File', command=self.askopenfilename).pack(**button_opt)
 		#Tkinter.Button(root, text='Set Alarm', command=self.setalarm).pack(**button_opt)
 
@@ -50,9 +49,10 @@ class VideoAlarmClockUI(Tkinter.Frame):
 	def askopenfilename(self):
 		return tkFileDialog.askopenfilename(**self.file_opt)
 
-	def getdate(self, root):
+	def getdatetime(self, root):
 		cd = CalendarDialog.CalendarDialog(root)
-		td = TimeDialog.TimeDialog(root)
+		if cd.result:
+			td = TimeDialog.TimeDialog(root)
 		print cd.result
 
 if __name__ == '__main__':

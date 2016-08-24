@@ -6,8 +6,11 @@ import tkSimpleDialog
 class CalendarDialog(tkSimpleDialog.Dialog):
     """Dialog box that displays a calendar and returns the selected date"""
     def body(self, master):
+        self.label = Tkinter.Label(master, text="Select a date")
+        self.label.pack(side=Tkinter.TOP)
         self.calendar = ttkcalendar.Calendar(master)
         self.calendar.pack()
+        return self.label
 
     def buttonbox(self):
         box = Tkinter.Frame(self)
@@ -20,7 +23,7 @@ class CalendarDialog(tkSimpleDialog.Dialog):
         self.bind("<Return>", self.ok)
         self.bind("<Escape>", self.cancel)
         box.pack()
-
+    
     def ok(self, event=None):
 
         if not self.validate():
@@ -33,7 +36,7 @@ class CalendarDialog(tkSimpleDialog.Dialog):
         self.apply()
 
         self.destroy()
-
+    
     def apply(self):
         self.result = self.calendar.selection
 
@@ -46,7 +49,7 @@ def main():
         cd = CalendarDialog(root)
         print cd.result
 
-    button = Tkinter.Button(root, text="Select time and date", command=onclick)
+    button = Tkinter.Button(root, text="Select date", command=onclick)
     button.pack()
     root.update()
 

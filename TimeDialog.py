@@ -1,13 +1,15 @@
 import Tkinter
-import ttkcalendar
-
+import tkinterClock
 import tkSimpleDialog
 
 class TimeDialog(tkSimpleDialog.Dialog):
 	"""Dialog box that displays a clock and returns the selected time"""
 	def body(self, master):
-		self.calendar = ttkcalendar.Calendar(master)
-		self.calendar.pack()
+		self.label = Tkinter.Label(master, text="Select a time")
+		self.label.pack(side=Tkinter.TOP)
+		self.clock = tkinterClock.Clock(master)
+		self.clock.pack()
+		return self.label
 
 	def buttonbox(self):
 		box = Tkinter.Frame(self)
@@ -35,4 +37,23 @@ class TimeDialog(tkSimpleDialog.Dialog):
 		self.cancel()
 
 	def apply(self):
-		self.result = self.calendar.selection
+		self.result = self.clock.selection
+
+# Demo code:
+def main():
+	root = Tkinter.Tk()
+	root.wm_title("Select a time")
+
+	def onclick():
+		td = TimeDialog(root)
+		print td.result
+
+	button = Tkinter.Button(root, text="Select time", command=onclick)
+	button.pack()
+	root.update()
+
+	root.mainloop()
+
+
+if __name__ == "__main__":
+	main()		
