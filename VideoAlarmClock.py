@@ -45,7 +45,7 @@ class VideoAlarmClockUI(Tkinter.Frame):
 		self.selected_videofile.set('Video File')		# default text
 		Tkinter.Label(root, textvariable=self.selected_videofile).grid(row=1, column=1, sticky=Tkinter.W)
 
-		#Tkinter.Button(root, text='Set Alarm', command=self.setalarm).pack(**button_opt)
+		Tkinter.Button(root, text='Set Alarm', command=self.setalarm).grid(row=2, column=0, sticky=Tkinter.W)
 		# When pressed, should check if selected date and time is valid; if not, a dialog should pop up to tell user to change the time
 
 		# define options for opening or saving a file
@@ -65,14 +65,46 @@ class VideoAlarmClockUI(Tkinter.Frame):
 		cd = CalendarDialog.CalendarDialog(root)
 		if cd.result:
 			self.selected_datetime.set(str(cd.result)[:-3])
-			print self.selected_datetime.get()
+			self.update_datetime_members(cd)
 			td = TimeDialog.TimeDialog(root)
 			if td.result:
 				newtime = self.selected_datetime.get()[:-5] + td.result
-				self.selected_datetime.set(newtime) 
+				self.selected_datetime.set(newtime)
+				self.hour = int(td.result[:2])
+				self.minute = int(td.result[3:])
 
-	def update_selected_datetime(self, cd):
-		self.selected_datetime.set(cd.result)
+	def update_datetime_members(self, cd):
+		self.year = int(cd.result.year)
+		self.month = int(cd.result.month)
+		self.day = int(cd.result.day)
+		self.hour = int(cd.result.hour)
+		self.minute = int(cd.result.minute)
+
+	def setalarm(self):
+		# will need to check if selected datetime and video file is valid
+
+		# let's assume for now that they're valid
+		# will need to extract datetime values like before
+		current_time = datetime.now()
+		alarm_time = datetime(self.year, self.month, self.day, self.hour, self.minute)
+		time_difference_in_sec = int((alarm_time - current_time).total_seconds())
+
+		# for now, just sleep until alarm_time
+		t.sleep(time_difference_in_sec)
+
+		# now, activate the alarm:
+		# get random youtube url
+		vf = open(self.selected_videofile.get())
+		url = random.choice(vf.readlines())
+
+		# play video in new tab
+		webbrowser.open_new_tab(url)
+
+		# change audio output to monitor's speakers and set volume to max
+		p = subprocess.Popen(["C:\\NIRCMD\\SPEAKERS.BAT"])
+		stdout, stderr = p.communicate()
+
+		vf.close()
 
 if __name__ == '__main__':
 	root = Tkinter.Tk()
