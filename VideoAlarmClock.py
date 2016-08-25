@@ -51,19 +51,25 @@ class VideoAlarmClockUI(Tkinter.Frame):
 		# define options for opening or saving a file
 		self.file_opt = options = {}
 		options['defaultextension'] = '.txt'
-		options['filetypes'] = [('All Files', '.*'), ('Text Files', '.txt')]
+		options['filetypes'] = [('Text Files', '.txt'), ('All Files', '.*')]
 		options['initialdir'] = 'C:\\'
 		options['initialfile'] = 'videos.txt'
 		options['parent'] = root
 		options['title'] = 'Select a file'
 
 	def askopenfilename(self):
+		# update the video file label with the file name
 		self.selected_videofile.set(str(os.path.basename(tkFileDialog.askopenfilename(**self.file_opt))))
 
 	def getdatetime(self, root):
 		cd = CalendarDialog.CalendarDialog(root)
 		if cd.result:
+			self.selected_datetime.set(str(cd.result)[:-3])
+			print self.selected_datetime.get()
 			td = TimeDialog.TimeDialog(root)
+			if td.result:
+				newtime = self.selected_datetime.get()[:-5] + td.result
+				self.selected_datetime.set(newtime) 
 
 	def update_selected_datetime(self, cd):
 		self.selected_datetime.set(cd.result)
