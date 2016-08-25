@@ -31,6 +31,7 @@ class Clock(Tkinter.Frame):
 
 	@property
 	def selection(self):
-		pass
+		return str(self.hourVar.get()) + ':' + str(self.minuteVar.get())
+		
 
 			

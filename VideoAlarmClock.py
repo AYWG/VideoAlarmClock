@@ -9,6 +9,7 @@ import time as t
 import subprocess
 import webbrowser
 import random
+import os
 
 # For the GUI
 import Tkinter
@@ -33,32 +34,44 @@ class VideoAlarmClockUI(Tkinter.Frame):
 
 		# define button for setting time and date here
 		
-		Tkinter.Button(root, text='Select Date and Time', command=lambda:self.getdatetime(root)).pack(**button_opt)
-		Tkinter.Button(root, text='Select Video File', command=self.askopenfilename).pack(**button_opt)
+		Tkinter.Button(root, text='Select Date and Time', command=lambda:self.getdatetime(root)).grid(row=0, column=0, sticky=Tkinter.W, pady=20, padx=20)
+		self.selected_datetime = Tkinter.StringVar(root)
+		self.selected_datetime.set('Date and Time') 	# default text
+		Tkinter.Label(root, textvariable=self.selected_datetime).grid(row=0, column=1, sticky=Tkinter.W)
+
+		Tkinter.Button(root, text='Select Video File', command=self.askopenfilename).grid(row=1, column=0, sticky=Tkinter.W, padx=20, ipadx=13)
+		# Display currently selected video file name to the right of the button
+		self.selected_videofile = Tkinter.StringVar(root)
+		self.selected_videofile.set('Video File')		# default text
+		Tkinter.Label(root, textvariable=self.selected_videofile).grid(row=1, column=1, sticky=Tkinter.W)
+
 		#Tkinter.Button(root, text='Set Alarm', command=self.setalarm).pack(**button_opt)
+		# When pressed, should check if selected date and time is valid; if not, a dialog should pop up to tell user to change the time
 
 		# define options for opening or saving a file
 		self.file_opt = options = {}
 		options['defaultextension'] = '.txt'
-		options['filetypes'] = [('all files', '.*'), ('text files', '.txt')]
+		options['filetypes'] = [('All Files', '.*'), ('Text Files', '.txt')]
 		options['initialdir'] = 'C:\\'
 		options['initialfile'] = 'videos.txt'
 		options['parent'] = root
-		options['title'] = 'This is a title'
+		options['title'] = 'Select a file'
 
 	def askopenfilename(self):
-		return tkFileDialog.askopenfilename(**self.file_opt)
+		self.selected_videofile.set(str(os.path.basename(tkFileDialog.askopenfilename(**self.file_opt))))
 
 	def getdatetime(self, root):
 		cd = CalendarDialog.CalendarDialog(root)
 		if cd.result:
 			td = TimeDialog.TimeDialog(root)
-		print cd.result
+
+	def update_selected_datetime(self, cd):
+		self.selected_datetime.set(cd.result)
 
 if __name__ == '__main__':
 	root = Tkinter.Tk()
 	root.title("Video Alarm Clock")
-	VideoAlarmClockUI(root).pack()
+	VideoAlarmClockUI(root)
 	root.mainloop()
 	quit()
 

@@ -5,4 +5,4 @@ in a new browser tab that will start playing. The program reads in a text file t
 Youtube videos and will randomly choose one and launch it. It also switches audio output to my monitor's speakers 
 and sets the volume to max (to ensure I hear it).
 
-Makes use of [tkinter_components](https://github.com/moshekaplan/tkinter_components) (with some slight modifications).
+GUI in progress; makes use of [tkinter_components](https://github.com/moshekaplan/tkinter_components) (with some slight modifications).
