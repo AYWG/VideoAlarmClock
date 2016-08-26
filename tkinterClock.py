@@ -1,4 +1,5 @@
 import Tkinter
+import ttk
 
 class Clock(Tkinter.Frame):
 
@@ -25,9 +26,24 @@ class Clock(Tkinter.Frame):
 		self.buildClock(master)
 
 	def buildClock(self, master):
-		apply(Tkinter.OptionMenu, (master, self.hourVar) + tuple(self.hourOptions)).pack(side=Tkinter.LEFT)
+		self.hourBox = ttk.Combobox(master, textvariable=self.hourVar, state='readonly')
+		self.hourBox['values'] = self.hourOptions
+		self.hourBox.bind('<<ComboboxSelected>>', self.clear_hourBox)
+		self.hourBox.pack(side=Tkinter.LEFT)
+
+		#apply(Tkinter.OptionMenu, (master, self.hourVar) + tuple(self.hourOptions)).pack(side=Tkinter.LEFT)
 		Tkinter.Label(master, text=':').pack(side=Tkinter.LEFT)
-		apply(Tkinter.OptionMenu, (master, self.minuteVar) + tuple(self.minuteOptions)).pack(side=Tkinter.RIGHT)
+		#apply(Tkinter.OptionMenu, (master, self.minuteVar) + tuple(self.minuteOptions)).pack(side=Tkinter.RIGHT)
+		self.minuteBox = ttk.Combobox(master, textvariable=self.minuteVar, state='readonly')
+		self.minuteBox['values'] = self.minuteOptions
+		self.minuteBox.bind('<<ComboboxSelected>>', self.clear_minuteBox)
+		self.minuteBox.pack(side=Tkinter.RIGHT)
+
+	def clear_hourBox(self, event):
+		self.hourBox.selection_clear()
+
+	def clear_minuteBox(self, event):
+		self.minuteBox.selection_clear()
 
 	@property
 	def selection(self):

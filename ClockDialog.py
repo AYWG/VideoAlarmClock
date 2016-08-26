@@ -2,7 +2,7 @@ import Tkinter
 import tkinterClock
 import tkSimpleDialog
 
-class TimeDialog(tkSimpleDialog.Dialog):
+class ClockDialog(tkSimpleDialog.Dialog):
 	"""Dialog box that displays a clock and returns the selected time"""
 	def body(self, master):
 		self.label = Tkinter.Label(master, text="Select a time")
@@ -45,7 +45,7 @@ def main():
 	root.wm_title("Select a time")
 
 	def onclick():
-		td = TimeDialog(root)
+		td = ClockDialog(root)
 		print td.result
 
 	button = Tkinter.Button(root, text="Select time", command=onclick)

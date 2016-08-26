@@ -13,11 +13,10 @@ import os
 
 # For the GUI
 import Tkinter
-import Tkconstants
 import ttkcalendar
 import tkSimpleDialog
 import CalendarDialog
-import TimeDialog
+import ClockDialog
 import tkFileDialog
 
 class VideoAlarmClockUI(Tkinter.Frame):
@@ -26,15 +25,13 @@ class VideoAlarmClockUI(Tkinter.Frame):
 
 		Tkinter.Frame.__init__(self, root)
 
-		# set minimum window size
+		# set fixed window size
 		root.minsize(width=300, height=200)
-
-		# options for buttons
-		button_opt = {'fill': Tkconstants.BOTH, 'padx': 30, 'pady': 10}
+		root.maxsize(width=300, height=200)
 
 		# define button for setting time and date here
 		
-		Tkinter.Button(root, text='Select Date and Time', command=lambda:self.getdatetime(root)).grid(row=0, column=0, sticky=Tkinter.W, pady=20, padx=20)
+		Tkinter.Button(root, text='Select Date and Time', command=lambda:self.get_datetime(root)).grid(row=0, column=0, sticky=Tkinter.W, padx=20, pady=20)
 		self.selected_datetime = Tkinter.StringVar(root)
 		self.selected_datetime.set('Date and Time') 	# default text
 		Tkinter.Label(root, textvariable=self.selected_datetime).grid(row=0, column=1, sticky=Tkinter.W)
@@ -45,7 +42,7 @@ class VideoAlarmClockUI(Tkinter.Frame):
 		self.selected_videofile.set('Video File')		# default text
 		Tkinter.Label(root, textvariable=self.selected_videofile).grid(row=1, column=1, sticky=Tkinter.W)
 
-		Tkinter.Button(root, text='Set Alarm', command=self.setalarm).grid(row=2, column=0, sticky=Tkinter.W)
+		Tkinter.Button(root, text='Set Alarm', command=self.setalarm).grid(row=2, column=0, sticky=Tkinter.W, padx=20, pady=20, ipadx=27)
 		# When pressed, should check if selected date and time is valid; if not, a dialog should pop up to tell user to change the time
 
 		# define options for opening or saving a file
@@ -58,15 +55,20 @@ class VideoAlarmClockUI(Tkinter.Frame):
 		options['title'] = 'Select a file'
 
 	def askopenfilename(self):
-		# update the video file label with the file name
-		self.selected_videofile.set(str(os.path.basename(tkFileDialog.askopenfilename(**self.file_opt))))
+		# get the path of the file
+		path_of_file = tkFileDialog.askopenfilename(**self.file_opt)
+		# only update video file label with file name if user clicked "Open"
+		if path_of_file:
+			self.selected_videofile.set(str(os.path.basename(path_of_file)))
 
-	def getdatetime(self, root):
+	def get_datetime(self, root):
+		# open up the calendar in a new dialog
 		cd = CalendarDialog.CalendarDialog(root)
 		if cd.result:
 			self.selected_datetime.set(str(cd.result)[:-3])
 			self.update_datetime_members(cd)
-			td = TimeDialog.TimeDialog(root)
+
+			td = ClockDialog.ClockDialog(root)
 			if td.result:
 				newtime = self.selected_datetime.get()[:-5] + td.result
 				self.selected_datetime.set(newtime)
@@ -80,6 +82,7 @@ class VideoAlarmClockUI(Tkinter.Frame):
 		self.hour = int(cd.result.hour)
 		self.minute = int(cd.result.minute)
 
+	# I'm thinking this should not be a method within the class
 	def setalarm(self):
 		# will need to check if selected datetime and video file is valid
 
@@ -88,6 +91,10 @@ class VideoAlarmClockUI(Tkinter.Frame):
 		current_time = datetime.now()
 		alarm_time = datetime(self.year, self.month, self.day, self.hour, self.minute)
 		time_difference_in_sec = int((alarm_time - current_time).total_seconds())
+
+		seconds_in_a_day = 86400
+		seconds_in_an_hour = 3600
+		seconds_in_a_min = 60
 
 		# for now, just sleep until alarm_time
 		t.sleep(time_difference_in_sec)
@@ -162,7 +169,7 @@ seconds_in_a_min = 60
 try:
 	for time_remaining in xrange(time_difference_in_sec, -1, -1):
 		sys.stdout.write('\r')
-		sys.stdout.write('Time until alarm: ')
+		sys.stdout.write('(Press CTRL + C to cancel) --- Time until alarm: ')
 		seconds_remaining = time_remaining
 
 		days = seconds_remaining / seconds_in_a_day
