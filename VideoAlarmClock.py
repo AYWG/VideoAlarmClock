@@ -17,7 +17,39 @@ import ttkcalendar
 import tkSimpleDialog
 import CalendarDialog
 import ClockDialog
+import WarningDialog
 import tkFileDialog
+
+class VideoAlarmClock:
+
+	def __init__(self):
+		# when I create a VideoAlarmClock object, what should I initialize it with, if anything?
+		pass
+
+	def is_invalid_alarm_datetime(self, alarm_datetime):
+		if alarm_datetime <= datetime.now():
+			return True
+		return False
+
+	def set_alarm(self, alarm_datetime):
+		self.alarm_datetime = alarm_datetime
+
+	def get_remaining_time_in_secs(self):
+		if self.alarm_datetime:
+			return int((self.alarm_datetime - datetime.now()).total_seconds())
+
+	def activate_alarm(self, video_file_name):
+		# get random youtube url
+		vf = open(video_file_name)
+		url = random.choice(vf.readlines())
+
+		# play video in new tab
+		webbrowser.open_new_tab(url)
+		# change audio output to monitor's speakers and set volume to max
+		p = subprocess.Popen(["C:\\NIRCMD\\SPEAKERS.BAT"])
+		stdout, stderr = p.communicate()
+
+		vf.close()
 
 class VideoAlarmClockUI(Tkinter.Frame):
 
@@ -29,23 +61,21 @@ class VideoAlarmClockUI(Tkinter.Frame):
 		root.minsize(width=300, height=200)
 		root.maxsize(width=300, height=200)
 
-		# define button for setting time and date here
+		self.alarm_clock = VideoAlarmClock()
 		
-		Tkinter.Button(root, text='Select Date and Time', command=lambda:self.get_datetime(root)).grid(row=0, column=0, sticky=Tkinter.W, padx=20, pady=20)
+		# create StringVar object that represents the UI's currently selected date and time
 		self.selected_datetime = Tkinter.StringVar(root)
 		self.selected_datetime.set('Date and Time') 	# default text
-		Tkinter.Label(root, textvariable=self.selected_datetime).grid(row=0, column=1, sticky=Tkinter.W)
-
-		Tkinter.Button(root, text='Select Video File', command=self.askopenfilename).grid(row=1, column=0, sticky=Tkinter.W, padx=20, ipadx=13)
-		# Display currently selected video file name to the right of the button
+				
+		# create StringVar object that represents the UI's currently selected video file
 		self.selected_videofile = Tkinter.StringVar(root)
 		self.selected_videofile.set('Video File')		# default text
-		Tkinter.Label(root, textvariable=self.selected_videofile).grid(row=1, column=1, sticky=Tkinter.W)
 
-		Tkinter.Button(root, text='Set Alarm', command=self.setalarm).grid(row=2, column=0, sticky=Tkinter.W, padx=20, pady=20, ipadx=27)
-		# When pressed, should check if selected date and time is valid; if not, a dialog should pop up to tell user to change the time
+		# create StringVar object that represents the UI's current video alarm clock "state"
+		self.alarm_state = Tkinter.StringVar(root)
+		self.alarm_state.set('Set Alarm')
 
-		# define options for opening or saving a file
+		# define options for opening a file
 		self.file_opt = options = {}
 		options['defaultextension'] = '.txt'
 		options['filetypes'] = [('Text Files', '.txt'), ('All Files', '.*')]
@@ -54,11 +84,29 @@ class VideoAlarmClockUI(Tkinter.Frame):
 		options['parent'] = root
 		options['title'] = 'Select a file'
 
-	def askopenfilename(self):
+		self.__initUI(root)
+
+	# Sets up the interface with the necessary widgets
+	def __initUI(self, root):
+
+		Tkinter.Button(root, text='Select Date and Time', command=lambda:self.get_datetime(root)).grid(row=0, column=0, sticky=Tkinter.W, padx=20, pady=20)
+		Tkinter.Label(root, textvariable=self.selected_datetime).grid(row=0, column=1, sticky=Tkinter.W)
+
+		Tkinter.Button(root, text='Select Video File', command=self.get_videofile).grid(row=1, column=0, sticky=Tkinter.W, padx=20, ipadx=13)
+		Tkinter.Label(root, textvariable=self.selected_videofile).grid(row=1, column=1, sticky=Tkinter.W)	
+
+		# One button that alternates between 'Set Alarm' and 'Cancel Alarm'
+		Tkinter.Button(root, textvariable=self.alarm_state, command=self.set_alarm).grid(row=3, columnspan=2, sticky=Tkinter.E, padx=66, pady=20, ipadx=50)
+		#Tkinter.Button(root, text='Cancel Alarm', command=self.set_alarm).grid(row=3, column=1, sticky=Tkinter.W, ipadx=18)
+
+		#Tkinter.Label(root, textvariable=self.something).grid(row=4, column=1, sticky=Tkinter.W, padx=20)
+
+	def get_videofile(self):
+
 		# get the path of the file
 		path_of_file = tkFileDialog.askopenfilename(**self.file_opt)
 		# only update video file label with file name if user clicked "Open"
-		if path_of_file:
+		if path_of_file: 
 			self.selected_videofile.set(str(os.path.basename(path_of_file)))
 
 	def get_datetime(self, root):
@@ -82,43 +130,33 @@ class VideoAlarmClockUI(Tkinter.Frame):
 		self.hour = int(cd.result.hour)
 		self.minute = int(cd.result.minute)
 
-	# I'm thinking this should not be a method within the class
-	def setalarm(self):
+	def set_alarm(self):
 		# will need to check if selected datetime and video file is valid
+		alarm_datetime = datetime(self.year, self.month, self.day, self.hour, self.minute)
+		if self.alarm_clock.is_invalid_alarm_datetime(alarm_datetime):
+			WarningDialog.WarningDialog(root, arg='Error: Invalid date and/or time')
+			return
 
 		# let's assume for now that they're valid
 		# will need to extract datetime values like before
-		current_time = datetime.now()
-		alarm_time = datetime(self.year, self.month, self.day, self.hour, self.minute)
-		time_difference_in_sec = int((alarm_time - current_time).total_seconds())
+		#current_time = datetime.now()
+		#alarm_time = datetime(self.year, self.month, self.day, self.hour, self.minute)
+		#time_difference_in_sec = int((alarm_time - current_time).total_seconds())
 
 		seconds_in_a_day = 86400
 		seconds_in_an_hour = 3600
 		seconds_in_a_min = 60
-
-		# for now, just sleep until alarm_time
-		t.sleep(time_difference_in_sec)
-
-		# now, activate the alarm:
-		# get random youtube url
-		vf = open(self.selected_videofile.get())
-		url = random.choice(vf.readlines())
-
-		# play video in new tab
-		webbrowser.open_new_tab(url)
-
-		# change audio output to monitor's speakers and set volume to max
-		p = subprocess.Popen(["C:\\NIRCMD\\SPEAKERS.BAT"])
-		stdout, stderr = p.communicate()
-
-		vf.close()
+ 
+ 		# now, activate the alarm
+		self.alarm_clock.activate_alarm(self.selected_videofile.get())
 
 if __name__ == '__main__':
-	root = Tkinter.Tk()
-	root.title("Video Alarm Clock")
-	VideoAlarmClockUI(root)
-	root.mainloop()
-	quit()
+	if len(sys.argv) == 1:
+		root = Tkinter.Tk()
+		root.title("Video Alarm Clock")
+		VideoAlarmClockUI(root)
+		root.mainloop()
+		quit()
 
 # Check number of arguments
 if len(sys.argv) != 6:
@@ -129,8 +167,6 @@ if len(sys.argv) != 6:
 	quit()
 
 script, time, day, month, year, video_file = sys.argv
-
-current_time = datetime.now()
 
 if (len(time) != 5 or time[2] != ':'): 	# format = xx:yy, so length == 5
 	print "Incorrect time format."
@@ -147,7 +183,7 @@ try:
 except ValueError:
 	print "Invalid time/date value"
 	quit()
-
+"""
 if (alarm_year < current_time.year or
 	(alarm_year == current_time.year and alarm_month < current_time.month) or
 	(alarm_year == current_time.year and alarm_month == current_time.month and alarm_day < current_time.day) or
@@ -158,8 +194,15 @@ if (alarm_year < current_time.year or
 	print "The provided time/date of the alarm clock is in the past."
 	print "Please provide a time and date in the future."
 	quit()
-
+"""
+current_time = datetime.now()
 alarm_time = datetime(alarm_year, alarm_month, alarm_day, alarm_hour, alarm_min)
+
+if alarm_time <= current_time:
+	print "The provided time/date of the alarm clock is in the past."
+	print "Please provide a time and date in the future."
+	quit()
+
 time_difference_in_sec = int((alarm_time - current_time).total_seconds())
 
 seconds_in_a_day = 86400

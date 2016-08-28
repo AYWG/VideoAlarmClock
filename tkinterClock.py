@@ -31,9 +31,8 @@ class Clock(Tkinter.Frame):
 		self.hourBox.bind('<<ComboboxSelected>>', self.clear_hourBox)
 		self.hourBox.pack(side=Tkinter.LEFT)
 
-		#apply(Tkinter.OptionMenu, (master, self.hourVar) + tuple(self.hourOptions)).pack(side=Tkinter.LEFT)
 		Tkinter.Label(master, text=':').pack(side=Tkinter.LEFT)
-		#apply(Tkinter.OptionMenu, (master, self.minuteVar) + tuple(self.minuteOptions)).pack(side=Tkinter.RIGHT)
+		
 		self.minuteBox = ttk.Combobox(master, textvariable=self.minuteVar, state='readonly')
 		self.minuteBox['values'] = self.minuteOptions
 		self.minuteBox.bind('<<ComboboxSelected>>', self.clear_minuteBox)

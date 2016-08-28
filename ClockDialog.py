@@ -4,7 +4,7 @@ import tkSimpleDialog
 
 class ClockDialog(tkSimpleDialog.Dialog):
 	"""Dialog box that displays a clock and returns the selected time"""
-	def body(self, master):
+	def body(self, master, arg = None):
 		self.label = Tkinter.Label(master, text="Select a time")
 		self.label.pack(side=Tkinter.TOP)
 		self.clock = tkinterClock.Clock(master)
@@ -31,9 +31,7 @@ class ClockDialog(tkSimpleDialog.Dialog):
 
 		self.withdraw()
 		self.update_idletasks()
-
 		self.apply()
-
 		self.cancel()
 
 	def apply(self):
@@ -51,9 +49,7 @@ def main():
 	button = Tkinter.Button(root, text="Select time", command=onclick)
 	button.pack()
 	root.update()
-
 	root.mainloop()
-
 
 if __name__ == "__main__":
 	main()		

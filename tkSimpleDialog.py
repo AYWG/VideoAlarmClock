@@ -3,7 +3,7 @@ from ttk import *
 
 class Dialog(Toplevel):
     """Sourced from http://effbot.org/tkinterbook/tkinter-dialog-windows.htm"""
-    def __init__(self, parent, title = None):
+    def __init__(self, parent, title = None, arg = None):
 
         Toplevel.__init__(self, parent)
         self.transient(parent)
@@ -11,12 +11,14 @@ class Dialog(Toplevel):
         if title:
             self.title(title)
 
+        self.arg = arg
+
         self.parent = parent
 
         self.result = None
 
         body = Frame(self)
-        self.initial_focus = self.body(body)
+        self.initial_focus = self.body(body, arg=self.arg)
         body.pack(padx=5, pady=5)
 
         self.buttonbox()
@@ -38,7 +40,7 @@ class Dialog(Toplevel):
     #
     # construction hooks
 
-    def body(self, master):
+    def body(self, master, arg = None):
         # create dialog body.  return widget that should have
         # initial focus.  this method should be overridden
 
