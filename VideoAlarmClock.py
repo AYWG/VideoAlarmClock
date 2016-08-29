@@ -194,97 +194,85 @@ class VideoAlarmClockUI(Tkinter.Frame):
 
 
 if __name__ == '__main__':
+	# If only argument is script name, run GUI
 	if len(sys.argv) == 1:
 		root = Tkinter.Tk()
 		root.title("Video Alarm Clock")
 		VideoAlarmClockUI(root)
 		root.mainloop()
 		quit()
+	# otherwise, run command-line version
+	else:
+		# Check number of arguments
+		if len(sys.argv) != 6:
+			print "Note: to use the GUI, simply run the script without any arguments.\n"
+			print "Invalid number of arguments."
+			print "Usage: python VideoAlarmClock.py [year] [month] [day] [time in 24-hour format] [video_file.txt]"
+			print "For example, to set alarm clock for 00:30 on June 24th 2016 using videos.txt, run:"
+			print "python VideoAlarmClock.py 2016 6 24 00:30 videos.txt"
+			quit()
 
-# Check number of arguments
-if len(sys.argv) != 6:
-	print "Invalid number of arguments."
-	print "Usage: python VideoAlarmClock.py [time in 24-hour format] [day] [month] [year] [video_file.txt]"
-	print "For example, to set alarm clock for 00:30 on June 24th 2016 using videos.txt, run:"
-	print "python VideoAlarmClock.py 00:30 24 6 2016 videos.txt"
-	quit()
+		script, year, month, day, time, video_file = sys.argv
 
-script, time, day, month, year, video_file = sys.argv
+		if (len(time) != 5 or time[2] != ':'): 	# format = xx:yy, so length == 5
+			print "Incorrect time format."
+			print "Please provide a time of the form: xx:yy"
+			print "where xx is the hour and yy is the minute (in 24-hour format)"
+			quit() 
 
-if (len(time) != 5 or time[2] != ':'): 	# format = xx:yy, so length == 5
-	print "Incorrect time format."
-	print "Please provide a time of the form: xx:yy"
-	print "where xx is the hour and yy is the minute (in 24-hour format)"
-	quit() 
+		try:
+			alarm_year = int(year)
+			alarm_month = int(month)
+			alarm_day = int(day)
+			alarm_hour = int(time[:2])
+			alarm_min = int(time[3:])
+		except ValueError:
+			print "Invalid time/date value"
+			quit()
 
-try:
-	alarm_year = int(year)
-	alarm_month = int(month)
-	alarm_day = int(day)
-	alarm_hour = int(time[:2])
-	alarm_min = int(time[3:])
-except ValueError:
-	print "Invalid time/date value"
-	quit()
+		alarm_clock = VideoAlarmClock()
+		alarm_datetime = datetime(alarm_year, alarm_month, alarm_day, alarm_hour, alarm_min)
+		if alarm_clock.is_invalid_alarm_datetime(alarm_datetime):
+			print "The provided time/date of the alarm clock is in the past."
+			print "Please provide a time and date in the future."
+			quit()
 
-current_time = datetime.now()
-alarm_time = datetime(alarm_year, alarm_month, alarm_day, alarm_hour, alarm_min)
+		alarm_clock.set_alarm(alarm_datetime)
 
-if alarm_time <= current_time:
-	print "The provided time/date of the alarm clock is in the past."
-	print "Please provide a time and date in the future."
-	quit()
+		try:
+			while alarm_clock.get_remaining_time_in_secs() > 0:
+				sys.stdout.write('\r')
+				sys.stdout.write('(Press CTRL + C to cancel) --- Time until alarm: ')
+				seconds_remaining = alarm_clock.get_remaining_time_in_secs()
 
-time_difference_in_sec = int((alarm_time - current_time).total_seconds())
+				days = seconds_remaining / seconds_in_a_day
+				seconds_remaining -= days * seconds_in_a_day
 
-seconds_in_a_day = 86400
-seconds_in_an_hour = 3600
-seconds_in_a_min = 60
+				if days > 0:
+					sys.stdout.write(str(days) + ' day(s), ')
 
-try:
-	for time_remaining in xrange(time_difference_in_sec, -1, -1):
-		sys.stdout.write('\r')
-		sys.stdout.write('(Press CTRL + C to cancel) --- Time until alarm: ')
-		seconds_remaining = time_remaining
+				hours = seconds_remaining / seconds_in_an_hour
+				seconds_remaining -= hours * seconds_in_an_hour
 
-		days = seconds_remaining / seconds_in_a_day
-		seconds_remaining -= days * seconds_in_a_day
+				if hours > 0 or days > 0:
+					sys.stdout.write(str(hours) + ' hour(s), ')
 
-		if days > 0:
-			sys.stdout.write(str(days) + ' day(s), ')
+				minutes = seconds_remaining / seconds_in_a_min
+				seconds_remaining -= minutes * seconds_in_a_min
 
-		hours = seconds_remaining / seconds_in_an_hour
-		seconds_remaining -= hours * seconds_in_an_hour
+				if minutes > 0 or hours > 0 or days > 0:
+					sys.stdout.write(str(minutes) + ' minute(s), ')
 
-		if hours > 0 or days > 0:
-			sys.stdout.write(str(hours) + ' hour(s), ')
+				seconds = seconds_remaining
+				sys.stdout.write(str(seconds) + ' second(s)' + ' ' * 20)
+				sys.stdout.flush()
+				t.sleep(1)
+		except KeyboardInterrupt:
+			print '\nAlarm canceled'
+			quit()
 
-		minutes = seconds_remaining / seconds_in_a_min
-		seconds_remaining -= minutes * seconds_in_a_min
+		print "\nTime's up!"
+		alarm_clock.activate_alarm(video_file)
 
-		if minutes > 0 or hours > 0 or days > 0:
-			sys.stdout.write(str(minutes) + ' minute(s), ')
-
-		seconds = seconds_remaining
-		sys.stdout.write(str(seconds) + ' second(s)' + ' ' * 20)
-		sys.stdout.flush()
-		t.sleep(1)
-except KeyboardInterrupt:
-	print '\nAlarm canceled'
-	quit()
-
-# now, activate the alarm:
-# get random youtube url
-vf = open(video_file)
-url = random.choice(vf.readlines())
-
-# play video in new tab
-webbrowser.open_new_tab(url)
-
-# change audio output to monitor's speakers and set volume to max
-p = subprocess.Popen(["C:\\NIRCMD\\SPEAKERS.BAT"])
-stdout, stderr = p.communicate()
-
-vf.close()
 
 
