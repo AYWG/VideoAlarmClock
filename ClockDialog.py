@@ -1,6 +1,7 @@
 import Tkinter
 import tkinterClock
 import tkSimpleDialog
+import WarningDialog
 
 class ClockDialog(tkSimpleDialog.Dialog):
 	"""Dialog box that displays a clock and returns the selected time"""
@@ -9,7 +10,6 @@ class ClockDialog(tkSimpleDialog.Dialog):
 		self.label.pack(side=Tkinter.TOP)
 		self.clock = tkinterClock.Clock(master)
 		self.clock.pack()
-		return self.label
 
 	def buttonbox(self):
 		box = Tkinter.Frame(self)
@@ -24,7 +24,6 @@ class ClockDialog(tkSimpleDialog.Dialog):
 		box.pack()
 
 	def ok(self, event=None):
-
 		if not self.validate():
 			self.initial_focus.focus_set() # put focus back
 			return
@@ -34,7 +33,15 @@ class ClockDialog(tkSimpleDialog.Dialog):
 		self.apply()
 		self.cancel()
 
-	def apply(self):
+	def validate(self):
+		# only true if either "Hour" or "Minute" is selected 
+		if len(self.clock.selection) > 6:
+			WarningDialog.WarningDialog(self, arg='Please select a valid time')
+			return 0
+		else:
+			return 1
+
+	def apply(self):		
 		self.result = self.clock.selection
 
 # Demo code:

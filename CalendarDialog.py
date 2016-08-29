@@ -2,6 +2,7 @@ import Tkinter
 import ttkcalendar
 
 import tkSimpleDialog
+import WarningDialog
 
 class CalendarDialog(tkSimpleDialog.Dialog):
     """Dialog box that displays a calendar and returns the selected date"""
@@ -36,6 +37,13 @@ class CalendarDialog(tkSimpleDialog.Dialog):
         self.apply()
 
         self.destroy()
+
+    def validate(self):
+        if self.calendar.selection == None:
+            WarningDialog.WarningDialog(self, arg='Please select a date')
+            return 0
+        else:
+            return 1        
     
     def apply(self):
         self.result = self.calendar.selection

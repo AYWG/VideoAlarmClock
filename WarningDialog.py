@@ -34,7 +34,7 @@ def main():
 	root.wm_title("Warning")
 
 	def onclick():
-		wd = WarningDialog(root, arg='KEK')
+		wd = WarningDialog(root, arg='HEY')
 		print wd.warning_message
 
 	button = Tkinter.Button(root, text="Warning", command=onclick)

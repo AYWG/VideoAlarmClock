@@ -27,7 +27,6 @@ seconds_in_a_min = 60
 class VideoAlarmClock:
 
 	def __init__(self):
-		# when I create a VideoAlarmClock object, what should I initialize it with, if anything?
 		pass
 
 	def is_invalid_alarm_datetime(self, alarm_datetime):
@@ -58,12 +57,16 @@ class VideoAlarmClock:
 class VideoAlarmClockUI(Tkinter.Frame):
 
 	def __init__(self, root):
-
+		self.root = root
 		Tkinter.Frame.__init__(self, root)
-
 		# set fixed window size
-		root.minsize(width=300, height=200)
-		root.maxsize(width=300, height=200)
+		root.minsize(width=300, height=220)
+		root.maxsize(width=300, height=220)
+
+		top_container = Tkinter.Frame(root)
+		top_container.pack(side='top', fill='both', expand=True)
+		bottom_container = Tkinter.Frame(root)
+		bottom_container.pack(side='top', fill='both', expand=True)
 
 		self.alarm_clock = VideoAlarmClock()
 		
@@ -85,45 +88,38 @@ class VideoAlarmClockUI(Tkinter.Frame):
 		# define options for opening a file
 		self.file_opt = options = {}
 		options['defaultextension'] = '.txt'
-		options['filetypes'] = [('Text Files', '.txt'), ('All Files', '.*')]
+		options['filetypes'] = [('Text Files', '.txt')]
 		options['initialdir'] = 'C:\\'
 		options['initialfile'] = 'videos.txt'
 		options['parent'] = root
 		options['title'] = 'Select a file'
 
-		self.__initUI(root)
+		# Set up the interface with the necessary widgets
+		Tkinter.Button(top_container, text='Select Date and Time', command=self.get_datetime).grid(row=0, column=0, sticky=Tkinter.W, padx=20, pady=20)
+		Tkinter.Label(top_container, textvariable=self.selected_datetime, anchor=Tkinter.W).grid(row=0, column=1, sticky=Tkinter.W)
 
-	# Sets up the interface with the necessary widgets
-	def __initUI(self, root):
-
-		Tkinter.Button(root, text='Select Date and Time', command=lambda:self.get_datetime(root)).grid(row=0, column=0, sticky=Tkinter.W, padx=20, pady=20)
-		Tkinter.Label(root, textvariable=self.selected_datetime).grid(row=0, column=1, sticky=Tkinter.W)
-
-		Tkinter.Button(root, text='Select Video File', command=self.get_videofile).grid(row=1, column=0, sticky=Tkinter.W, padx=20, ipadx=13)
-		Tkinter.Label(root, textvariable=self.selected_videofile).grid(row=1, column=1, sticky=Tkinter.W)	
+		Tkinter.Button(top_container, text='Select Video File', command=self.get_videofile).grid(row=1, column=0, sticky=Tkinter.W, padx=20, ipadx=13)
+		Tkinter.Label(top_container, textvariable=self.selected_videofile).grid(row=1, column=1, sticky=Tkinter.W)	
 
 		# One button that alternates between 'Set Alarm' and 'Cancel Alarm'
-		Tkinter.Button(root, textvariable=self.alarm_state_text, command=self.set_alarm).grid(row=3, columnspan=2, sticky=Tkinter.E, padx=66, pady=20, ipadx=50)
-		#Tkinter.Button(root, text='Cancel Alarm', command=self.set_alarm).grid(row=3, column=1, sticky=Tkinter.W, ipadx=18)
-
-		Tkinter.Label(root, textvariable=self.time_remaining).grid(row=4, columnspan=2, sticky=Tkinter.W + Tkinter.E, padx=20)
+		Tkinter.Button(bottom_container, textvariable=self.alarm_state_text, command=self.set_alarm).pack(padx=66, pady=15, ipadx=50)
+		Tkinter.Label(bottom_container, textvariable=self.time_remaining, wraplength=200).pack(padx=20, pady=10)
 
 	def get_videofile(self):
-
 		# get the path of the file
 		path_of_file = tkFileDialog.askopenfilename(**self.file_opt)
 		# only update video file label with file name if user clicked "Open"
 		if path_of_file: 
 			self.selected_videofile.set(str(os.path.basename(path_of_file)))
 
-	def get_datetime(self, root):
+	def get_datetime(self):
 		# open up the calendar in a new dialog
-		cd = CalendarDialog.CalendarDialog(root)
+		cd = CalendarDialog.CalendarDialog(self.root)
 		if cd.result:
 			self.selected_datetime.set(str(cd.result)[:-3])
 			self.update_datetime_members(cd)
 
-			td = ClockDialog.ClockDialog(root)
+			td = ClockDialog.ClockDialog(self.root)
 			if td.result:
 				newtime = self.selected_datetime.get()[:-5] + td.result
 				self.selected_datetime.set(newtime)
@@ -139,17 +135,20 @@ class VideoAlarmClockUI(Tkinter.Frame):
 
 	def set_alarm(self):
 		if self.alarm_state == 0:
-			# will need to check if selected datetime and video file is valid
-			alarm_datetime = datetime(self.year, self.month, self.day, self.hour, self.minute)
-			if self.alarm_clock.is_invalid_alarm_datetime(alarm_datetime):
-				WarningDialog.WarningDialog(root, arg='Error: Invalid date and/or time')
+			# first, need to check if date/time and video file have been selected
+			if self.selected_datetime.get() == 'Date and Time':
+				WarningDialog.WarningDialog(self.root, arg='Please select a date and time first!')
+				return
+			if self.selected_videofile.get() == 'Video File':
+				WarningDialog.WarningDialog(self.root, arg='Please select a video file first!')
 				return
 
-			# let's assume for now that they're valid
-			# will need to extract datetime values like before
-			#current_time = datetime.now()
-			#alarm_time = datetime(self.year, self.month, self.day, self.hour, self.minute)
-			#time_difference_in_sec = int((alarm_time - current_time).total_seconds())
+			# then, need to check if selected datetime and video file is valid
+			alarm_datetime = datetime(self.year, self.month, self.day, self.hour, self.minute)
+			if self.alarm_clock.is_invalid_alarm_datetime(alarm_datetime):
+				WarningDialog.WarningDialog(self.root, arg='Please select a date and time in the future')
+				return
+
 			self.alarm_clock.set_alarm(alarm_datetime)
 			self.alarm_state_text.set('Cancel Alarm')
 			self.alarm_state = 1
