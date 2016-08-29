@@ -76,11 +76,11 @@ class VideoAlarmClockUI(Tkinter.Frame):
 		self.selected_videofile.set('Video File')		# default text
 
 		# create StringVar object that represents the UI's current video alarm clock "state"
-		self.alarm_state = Tkinter.StringVar(root)
-		self.alarm_state.set('Set Alarm')
+		self.alarm_state_text = Tkinter.StringVar(root)
+		self.alarm_state_text.set('Set Alarm')
+		self.alarm_state = 0
 
 		self.time_remaining = Tkinter.StringVar(root)
-		self.time_remaining.set('Blank')
 
 		# define options for opening a file
 		self.file_opt = options = {}
@@ -103,7 +103,7 @@ class VideoAlarmClockUI(Tkinter.Frame):
 		Tkinter.Label(root, textvariable=self.selected_videofile).grid(row=1, column=1, sticky=Tkinter.W)	
 
 		# One button that alternates between 'Set Alarm' and 'Cancel Alarm'
-		Tkinter.Button(root, textvariable=self.alarm_state, command=self.set_alarm).grid(row=3, columnspan=2, sticky=Tkinter.E, padx=66, pady=20, ipadx=50)
+		Tkinter.Button(root, textvariable=self.alarm_state_text, command=self.set_alarm).grid(row=3, columnspan=2, sticky=Tkinter.E, padx=66, pady=20, ipadx=50)
 		#Tkinter.Button(root, text='Cancel Alarm', command=self.set_alarm).grid(row=3, column=1, sticky=Tkinter.W, ipadx=18)
 
 		Tkinter.Label(root, textvariable=self.time_remaining).grid(row=4, columnspan=2, sticky=Tkinter.W + Tkinter.E, padx=20)
@@ -138,25 +138,34 @@ class VideoAlarmClockUI(Tkinter.Frame):
 		self.minute = int(cd.result.minute)
 
 	def set_alarm(self):
-		# will need to check if selected datetime and video file is valid
-		alarm_datetime = datetime(self.year, self.month, self.day, self.hour, self.minute)
-		if self.alarm_clock.is_invalid_alarm_datetime(alarm_datetime):
-			WarningDialog.WarningDialog(root, arg='Error: Invalid date and/or time')
-			return
+		if self.alarm_state == 0:
+			# will need to check if selected datetime and video file is valid
+			alarm_datetime = datetime(self.year, self.month, self.day, self.hour, self.minute)
+			if self.alarm_clock.is_invalid_alarm_datetime(alarm_datetime):
+				WarningDialog.WarningDialog(root, arg='Error: Invalid date and/or time')
+				return
 
-		# let's assume for now that they're valid
-		# will need to extract datetime values like before
-		#current_time = datetime.now()
-		#alarm_time = datetime(self.year, self.month, self.day, self.hour, self.minute)
-		#time_difference_in_sec = int((alarm_time - current_time).total_seconds())
-		self.alarm_clock.set_alarm(alarm_datetime)
-
-		self.countdown_alarm()
+			# let's assume for now that they're valid
+			# will need to extract datetime values like before
+			#current_time = datetime.now()
+			#alarm_time = datetime(self.year, self.month, self.day, self.hour, self.minute)
+			#time_difference_in_sec = int((alarm_time - current_time).total_seconds())
+			self.alarm_clock.set_alarm(alarm_datetime)
+			self.alarm_state_text.set('Cancel Alarm')
+			self.alarm_state = 1
+			self.countdown_alarm()
+		else:
+			self.alarm_state = 0
 
 	def countdown_alarm(self):
 		if self.alarm_clock.get_remaining_time_in_secs() <= 0:
-			self.time_remaining.set("Time's up!")
+			self.time_remaining.set("Time's Up!")
+			self.alarm_state = 0
+			self.alarm_state_text.set('Set Alarm')
 			self.alarm_clock.activate_alarm(self.selected_videofile.get())
+		elif self.alarm_state == 0:
+			self.alarm_state_text.set('Set Alarm')
+			self.time_remaining.set('Alarm Canceled')
 		else:
 			seconds_remaining = self.alarm_clock.get_remaining_time_in_secs()
 			tr = 'Time until alarm: '
