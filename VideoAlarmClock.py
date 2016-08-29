@@ -20,6 +20,10 @@ import ClockDialog
 import WarningDialog
 import tkFileDialog
 
+seconds_in_a_day = 86400
+seconds_in_an_hour = 3600
+seconds_in_a_min = 60
+
 class VideoAlarmClock:
 
 	def __init__(self):
@@ -75,6 +79,9 @@ class VideoAlarmClockUI(Tkinter.Frame):
 		self.alarm_state = Tkinter.StringVar(root)
 		self.alarm_state.set('Set Alarm')
 
+		self.time_remaining = Tkinter.StringVar(root)
+		self.time_remaining.set('Blank')
+
 		# define options for opening a file
 		self.file_opt = options = {}
 		options['defaultextension'] = '.txt'
@@ -99,7 +106,7 @@ class VideoAlarmClockUI(Tkinter.Frame):
 		Tkinter.Button(root, textvariable=self.alarm_state, command=self.set_alarm).grid(row=3, columnspan=2, sticky=Tkinter.E, padx=66, pady=20, ipadx=50)
 		#Tkinter.Button(root, text='Cancel Alarm', command=self.set_alarm).grid(row=3, column=1, sticky=Tkinter.W, ipadx=18)
 
-		#Tkinter.Label(root, textvariable=self.something).grid(row=4, column=1, sticky=Tkinter.W, padx=20)
+		Tkinter.Label(root, textvariable=self.time_remaining).grid(row=4, columnspan=2, sticky=Tkinter.W + Tkinter.E, padx=20)
 
 	def get_videofile(self):
 
@@ -142,13 +149,41 @@ class VideoAlarmClockUI(Tkinter.Frame):
 		#current_time = datetime.now()
 		#alarm_time = datetime(self.year, self.month, self.day, self.hour, self.minute)
 		#time_difference_in_sec = int((alarm_time - current_time).total_seconds())
+		self.alarm_clock.set_alarm(alarm_datetime)
 
-		seconds_in_a_day = 86400
-		seconds_in_an_hour = 3600
-		seconds_in_a_min = 60
- 
- 		# now, activate the alarm
-		self.alarm_clock.activate_alarm(self.selected_videofile.get())
+		self.countdown_alarm()
+
+	def countdown_alarm(self):
+		if self.alarm_clock.get_remaining_time_in_secs() <= 0:
+			self.time_remaining.set("Time's up!")
+			self.alarm_clock.activate_alarm(self.selected_videofile.get())
+		else:
+			seconds_remaining = self.alarm_clock.get_remaining_time_in_secs()
+			tr = 'Time until alarm: '
+
+			days = seconds_remaining / seconds_in_a_day
+			seconds_remaining -= days * seconds_in_a_day
+
+			if days > 0:
+				tr += str(days) + ' day(s), '
+
+			hours = seconds_remaining / seconds_in_an_hour
+			seconds_remaining -= hours * seconds_in_an_hour
+
+			if hours > 0 or days > 0:
+				tr += str(hours) + ' hour(s), '
+
+			minutes = seconds_remaining / seconds_in_a_min
+			seconds_remaining -= minutes * seconds_in_a_min
+
+			if minutes > 0 or hours > 0 or days > 0:
+				tr += str(minutes) + ' minute(s), '
+
+			seconds = seconds_remaining
+			tr += str(seconds) + ' second(s)'
+			self.time_remaining.set(tr)
+			self.after(1000, self.countdown_alarm)
+
 
 if __name__ == '__main__':
 	if len(sys.argv) == 1:
@@ -183,18 +218,7 @@ try:
 except ValueError:
 	print "Invalid time/date value"
 	quit()
-"""
-if (alarm_year < current_time.year or
-	(alarm_year == current_time.year and alarm_month < current_time.month) or
-	(alarm_year == current_time.year and alarm_month == current_time.month and alarm_day < current_time.day) or
-	(alarm_year == current_time.year and alarm_month == current_time.month and alarm_day == current_time.day
-	 and alarm_hour < current_time.hour) or
-	(alarm_year == current_time.year and alarm_month == current_time.month and alarm_day == current_time.day
-	 and alarm_hour == current_time.hour and alarm_minute <= current_time.minute)):
-	print "The provided time/date of the alarm clock is in the past."
-	print "Please provide a time and date in the future."
-	quit()
-"""
+
 current_time = datetime.now()
 alarm_time = datetime(alarm_year, alarm_month, alarm_day, alarm_hour, alarm_min)
 
