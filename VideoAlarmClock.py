@@ -38,9 +38,9 @@ class VideoAlarmClock:
 		if self.alarm_datetime:
 			return int((self.alarm_datetime - datetime.now()).total_seconds())
 
-	def activate_alarm(self, video_file_name):
+	def activate_alarm(self, video_file_path):
 		# get random youtube url
-		vf = open(video_file_name)
+		vf = open(video_file_path)
 		url = random.choice(vf.readlines())
 
 		# play video in new tab
@@ -107,28 +107,33 @@ class VideoAlarmClockUI(Tkinter.Frame):
 		path_of_file = tkFileDialog.askopenfilename(**self.file_opt)
 		# only update video file label with file name if user clicked "Open"
 		if path_of_file: 
-			self.selected_videofile.set(str(os.path.basename(path_of_file)))
+			if os.path.getsize(path_of_file) == 0:
+				WarningDialog.WarningDialog(self.root, arg='Selected file is empty. Please select another file.')
+			else:
+				self.selected_videofile_path = path_of_file
+				self.selected_videofile.set(str(os.path.basename(path_of_file)))
 
 	def get_datetime(self):
 		# open up the calendar in a new dialog
-		cd = CalendarDialog.CalendarDialog(self.root)
-		if cd.result:
-			self.selected_datetime.set(str(cd.result)[:-3])
-			self.update_datetime_members(cd)
+		cal = CalendarDialog.CalendarDialog(self.root)
+		if cal.result:
+			self.selected_datetime.set(str(cal.result)[:-3])
+			self.update_datetime_members(cal)
 
-			td = ClockDialog.ClockDialog(self.root)
-			if td.result:
-				newtime = self.selected_datetime.get()[:-5] + td.result
+			# open up the clock in a new dialog
+			clk = ClockDialog.ClockDialog(self.root)
+			if clk.result:
+				newtime = self.selected_datetime.get()[:-5] + clk.result
 				self.selected_datetime.set(newtime)
-				self.hour = int(td.result[:2])
-				self.minute = int(td.result[3:])
+				self.hour = int(clk.result[:2])
+				self.minute = int(clk.result[3:])
 
-	def update_datetime_members(self, cd):
-		self.year = int(cd.result.year)
-		self.month = int(cd.result.month)
-		self.day = int(cd.result.day)
-		self.hour = int(cd.result.hour)
-		self.minute = int(cd.result.minute)
+	def update_datetime_members(self, cal):
+		self.year = int(cal.result.year)
+		self.month = int(cal.result.month)
+		self.day = int(cal.result.day)
+		self.hour = int(cal.result.hour)
+		self.minute = int(cal.result.minute)
 
 	def set_alarm(self):
 		if self.alarm_state == 0:
@@ -154,14 +159,17 @@ class VideoAlarmClockUI(Tkinter.Frame):
 			self.alarm_state = 0
 
 	def countdown_alarm(self):
+		# Alarm finished (reset)
 		if self.alarm_clock.get_remaining_time_in_secs() <= 0:
 			self.time_remaining.set("Time's Up!")
 			self.alarm_state = 0
 			self.alarm_state_text.set('Set Alarm')
 			self.alarm_clock.activate_alarm(self.selected_videofile.get())
+		# Alarm has been canceled (reset)
 		elif self.alarm_state == 0:
 			self.alarm_state_text.set('Set Alarm')
 			self.time_remaining.set('Alarm Canceled')
+		# Alarm is counting down
 		else:
 			seconds_remaining = self.alarm_clock.get_remaining_time_in_secs()
 			tr = 'Time until alarm: '
@@ -187,6 +195,10 @@ class VideoAlarmClockUI(Tkinter.Frame):
 			seconds = seconds_remaining
 			tr += str(seconds) + ' second(s)'
 			self.time_remaining.set(tr)
+
+			# Wait 1000 ms before calling itself again.
+			# Need to use after method (rather than sleep) to
+			# avoid issues with mainloop()
 			self.after(1000, self.countdown_alarm)
 
 
@@ -198,18 +210,26 @@ if __name__ == '__main__':
 		VideoAlarmClockUI(root)
 		root.mainloop()
 		quit()
-	# otherwise, run command-line version
+##### otherwise, run command-line version ############################################################
 	else:
 		# Check number of arguments
 		if len(sys.argv) != 6:
 			print "Note: to use the GUI, simply run the script without any arguments.\n"
 			print "Invalid number of arguments."
-			print "Usage: python VideoAlarmClock.py [year] [month] [day] [time in 24-hour format] [video_file.txt]"
-			print "For example, to set alarm clock for 00:30 on June 24th 2016 using videos.txt, run:"
-			print "python VideoAlarmClock.py 2016 6 24 00:30 videos.txt"
+			print "Usage: python VideoAlarmClock.py [year] [month] [day] [time in 24-hour format] [ path/to/video_file.txt ]"
+			print "For example, to set alarm clock for 00:30 on June 24th 2016 using videos.txt (stored on C drive), run:"
+			print "python VideoAlarmClock.py 2016 6 24 00:30 C:/videos.txt"
 			quit()
 
-		script, year, month, day, time, video_file = sys.argv
+		script, year, month, day, time, video_file_path = sys.argv
+
+		if not os.path.isfile(video_file_path):
+			print "Error: file does not exist."
+			quit()
+
+		if os.path.getsize(video_file_path) == 0:
+			print "Error: empty file."
+			quit()
 
 		if (len(time) != 5 or time[2] != ':'): 	# format = xx:yy, so length == 5
 			print "Incorrect time format."
@@ -269,7 +289,7 @@ if __name__ == '__main__':
 			quit()
 
 		print "\nTime's up!"
-		alarm_clock.activate_alarm(video_file)
+		alarm_clock.activate_alarm(video_file_path)
 
 
 
