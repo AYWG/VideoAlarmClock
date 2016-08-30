@@ -1,5 +1,9 @@
 # VideoAlarmClock
 
+<img src="https://github.com/AYWG/VideoAlarmClock/blob/master/img/VAC1.jpg" alt="VAC Screenshot 1" width="250" height="200">
+<img src="https://github.com/AYWG/VideoAlarmClock/blob/master/img/VAC2.jpg" alt="VAC Screenshot 2" width="250" height="200">
+<img src="https://github.com/AYWG/VideoAlarmClock/blob/master/img/VAC3.jpg" alt="VAC Screenshot 3" width="250" height="200">
+
 A simple alarm clock developed in Python, using [Tkinter](https://wiki.python.org/moin/TkInter) for its GUI.
 The program receives from the user:
 
