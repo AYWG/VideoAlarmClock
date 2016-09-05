@@ -14,7 +14,7 @@ Once the current system time reaches the alarm time, the program will randomly c
 
 *The program also functions solely through the command line (no GUI needed).*
 
-Makes use of [tkinter_components](https://github.com/moshekaplan/tkinter_components) (with some slight modifications and additions).
+Makes use of [tkinter_components](https://github.com/moshekaplan/tkinter_components) (with some slight modifications and additions). Also uses [tkFileDialog](http://tkinter.unpythonic.net/wiki/tkFileDialog).
 
 ---
 
