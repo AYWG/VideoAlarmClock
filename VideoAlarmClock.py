@@ -7,6 +7,7 @@ import subprocess
 import webbrowser
 import random
 import os
+import const
 
 # For the GUI
 import Tkinter
@@ -17,15 +18,12 @@ import ClockDialog
 import WarningDialog
 import tkFileDialog
 
-seconds_in_a_day = 86400
-seconds_in_an_hour = 3600
-seconds_in_a_min = 60
-
 class VideoAlarmClock:
-
+	# basic constructor
 	def __init__(self):
 		pass
 
+	# Checks if the given alarm time is invalid
 	def is_invalid_alarm_datetime(self, alarm_datetime):
 		if alarm_datetime <= datetime.now():
 			return True
@@ -46,7 +44,7 @@ class VideoAlarmClock:
 		# play video in new tab
 		webbrowser.open_new_tab(url)
 		# change audio output to monitor's speakers and set volume to max
-		p = subprocess.Popen(["C:\\NIRCMD\\SPEAKERS.BAT"])
+		p = subprocess.Popen([const.change_speakers_script_path])
 		stdout, stderr = p.communicate()
 
 		vf.close()
@@ -57,8 +55,8 @@ class VideoAlarmClockUI(Tkinter.Frame):
 		self.root = root
 		Tkinter.Frame.__init__(self, root)
 		# set fixed window size
-		root.minsize(width=300, height=220)
-		root.maxsize(width=300, height=220)
+		root.minsize(width=const.window_width, height=const.window_height)
+		root.maxsize(width=const.window_width, height=const.window_height)
 
 		top_container = Tkinter.Frame(root)
 		top_container.pack(side='top', fill='both', expand=True)
@@ -69,15 +67,15 @@ class VideoAlarmClockUI(Tkinter.Frame):
 		
 		# create StringVar object that represents the UI's currently selected date and time
 		self.selected_datetime = Tkinter.StringVar(root)
-		self.selected_datetime.set('Date and Time') 	# default text
+		self.selected_datetime.set(const.datetime_default) 	
 				
 		# create StringVar object that represents the UI's currently selected video file
 		self.selected_videofile = Tkinter.StringVar(root)
-		self.selected_videofile.set('Video File')		# default text
+		self.selected_videofile.set(const.videofile_default)
 
 		# create StringVar object that represents the UI's current video alarm clock "state"
 		self.alarm_state_text = Tkinter.StringVar(root)
-		self.alarm_state_text.set('Set Alarm')
+		self.alarm_state_text.set(const.alarmstate_default)
 		self.alarm_state = 0
 
 		self.time_remaining = Tkinter.StringVar(root)
@@ -98,7 +96,7 @@ class VideoAlarmClockUI(Tkinter.Frame):
 		Tkinter.Button(top_container, text='Select Video File', command=self.get_videofile).grid(row=1, column=0, sticky=Tkinter.W, padx=20, ipadx=13)
 		Tkinter.Label(top_container, textvariable=self.selected_videofile).grid(row=1, column=1, sticky=Tkinter.W)	
 
-		# One button that alternates between 'Set Alarm' and 'Cancel Alarm'
+		# One button that alternates between const.alarmstate_default and const.alarm_cancel
 		Tkinter.Button(bottom_container, textvariable=self.alarm_state_text, command=self.set_alarm).pack(padx=66, pady=15, ipadx=50)
 		Tkinter.Label(bottom_container, textvariable=self.time_remaining, wraplength=200).pack(padx=20, pady=10)
 
@@ -108,7 +106,7 @@ class VideoAlarmClockUI(Tkinter.Frame):
 		# only update video file label with file name if user clicked "Open"
 		if path_of_file: 
 			if os.path.getsize(path_of_file) == 0:
-				WarningDialog.WarningDialog(self.root, arg='Selected file is empty. Please select another file.')
+				WarningDialog.WarningDialog(self.root, arg=const.emptyfile_warning)
 			else:
 				self.selected_videofile_path = path_of_file
 				self.selected_videofile.set(str(os.path.basename(path_of_file)))
@@ -138,21 +136,21 @@ class VideoAlarmClockUI(Tkinter.Frame):
 	def set_alarm(self):
 		if self.alarm_state == 0:
 			# first, need to check if date/time and video file have been selected
-			if self.selected_datetime.get() == 'Date and Time':
-				WarningDialog.WarningDialog(self.root, arg='Please select a date and time first!')
+			if self.selected_datetime.get() == const.datetime_default:
+				WarningDialog.WarningDialog(self.root, arg=const.datetime_warning)
 				return
-			if self.selected_videofile.get() == 'Video File':
-				WarningDialog.WarningDialog(self.root, arg='Please select a video file first!')
+			if self.selected_videofile.get() == const.videofile_default:
+				WarningDialog.WarningDialog(self.root, arg=const.videofile_warning)
 				return
 
 			# then, need to check if selected datetime and video file is valid
 			alarm_datetime = datetime(self.year, self.month, self.day, self.hour, self.minute)
 			if self.alarm_clock.is_invalid_alarm_datetime(alarm_datetime):
-				WarningDialog.WarningDialog(self.root, arg='Please select a date and time in the future')
+				WarningDialog.WarningDialog(self.root, arg=const.future_warning)
 				return
 
 			self.alarm_clock.set_alarm(alarm_datetime)
-			self.alarm_state_text.set('Cancel Alarm')
+			self.alarm_state_text.set(const.alarm_cancel)
 			self.alarm_state = 1
 			self.countdown_alarm()
 		else:
@@ -161,33 +159,33 @@ class VideoAlarmClockUI(Tkinter.Frame):
 	def countdown_alarm(self):
 		# Alarm finished (reset)
 		if self.alarm_clock.get_remaining_time_in_secs() <= 0:
-			self.time_remaining.set("Time's Up!")
+			self.time_remaining.set(const.alarm_finished)
 			self.alarm_state = 0
-			self.alarm_state_text.set('Set Alarm')
+			self.alarm_state_text.set(const.alarmstate_default)
 			self.alarm_clock.activate_alarm(self.selected_videofile.get())
 		# Alarm has been canceled (reset)
 		elif self.alarm_state == 0:
-			self.alarm_state_text.set('Set Alarm')
-			self.time_remaining.set('Alarm Canceled')
+			self.alarm_state_text.set(const.alarmstate_default)
+			self.time_remaining.set(const.alarm_canceled)
 		# Alarm is counting down
 		else:
 			seconds_remaining = self.alarm_clock.get_remaining_time_in_secs()
 			tr = 'Time until alarm: '
 
-			days = seconds_remaining / seconds_in_a_day
-			seconds_remaining -= days * seconds_in_a_day
+			days = seconds_remaining / const.seconds_in_a_day
+			seconds_remaining -= days * const.seconds_in_a_day
 
 			if days > 0:
 				tr += str(days) + ' day(s), '
 
-			hours = seconds_remaining / seconds_in_an_hour
-			seconds_remaining -= hours * seconds_in_an_hour
+			hours = seconds_remaining / const.seconds_in_an_hour
+			seconds_remaining -= hours * const.seconds_in_an_hour
 
 			if hours > 0 or days > 0:
 				tr += str(hours) + ' hour(s), '
 
-			minutes = seconds_remaining / seconds_in_a_min
-			seconds_remaining -= minutes * seconds_in_a_min
+			minutes = seconds_remaining / const.seconds_in_a_min
+			seconds_remaining -= minutes * const.seconds_in_a_min
 
 			if minutes > 0 or hours > 0 or days > 0:
 				tr += str(minutes) + ' minute(s), '
@@ -262,20 +260,20 @@ if __name__ == '__main__':
 				sys.stdout.write('(Press CTRL + C to cancel) --- Time until alarm: ')
 				seconds_remaining = alarm_clock.get_remaining_time_in_secs()
 
-				days = seconds_remaining / seconds_in_a_day
-				seconds_remaining -= days * seconds_in_a_day
+				days = seconds_remaining / const.seconds_in_a_day
+				seconds_remaining -= days * const.seconds_in_a_day
 
 				if days > 0:
 					sys.stdout.write(str(days) + ' day(s), ')
 
-				hours = seconds_remaining / seconds_in_an_hour
-				seconds_remaining -= hours * seconds_in_an_hour
+				hours = seconds_remaining / const.seconds_in_an_hour
+				seconds_remaining -= hours * const.seconds_in_an_hour
 
 				if hours > 0 or days > 0:
 					sys.stdout.write(str(hours) + ' hour(s), ')
 
-				minutes = seconds_remaining / seconds_in_a_min
-				seconds_remaining -= minutes * seconds_in_a_min
+				minutes = seconds_remaining / const.seconds_in_a_min
+				seconds_remaining -= minutes * const.seconds_in_a_min
 
 				if minutes > 0 or hours > 0 or days > 0:
 					sys.stdout.write(str(minutes) + ' minute(s), ')
@@ -285,10 +283,10 @@ if __name__ == '__main__':
 				sys.stdout.flush()
 				t.sleep(1)
 		except KeyboardInterrupt:
-			print '\nAlarm canceled'
+			print '\nAlarm Canceled'
 			quit()
 
-		print "\nTime's up!"
+		print "\nTime's Up!"
 		alarm_clock.activate_alarm(video_file_path)
 
 
